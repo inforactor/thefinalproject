@@ -1,119 +1,150 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:thefinalproject/homepage/homepge.dart';
-import 'package:thefinalproject/homepage/login_window.dart';
-void main(){
-  runApp(HomeScreen());
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'connection.dart';
+import 'recharge.dart';
+import 'StoreUid.dart';
+import 'dashboard.dart';
+
+void main() {
+  runApp(const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: HomePage(),
+  ));
 }
 
-class HomeScreen extends StatelessWidget{
+class HomePage extends StatelessWidget {
+  const HomePage({Key? key}) : super(key: key);
+
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          appBar: AppBar(
-            title: const Text("BillSpark"),
-            centerTitle:true,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                '/home/gunjan/Documents/figma/bolt-solid.svg', // Replace with the path to your logo image
-                width: 32, // Adjust the width as needed
-                height: 24, // Adjust the height as needed
-              ),
-            ),
-          ),
-          body: Material(
-            child: Container(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text("BillSpark"),
+          centerTitle: true,
+        ),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _NumberDisplay(),
 
+            const SizedBox(height: 20),
+            Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.green,
-                          onPrimary: Colors.white,
-                          padding: EdgeInsets.all(20.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                          onPressed:(){
-                            print("Bill Paid");
-                          }, child: Text('View Bill')),
-
-
-                      ElevatedButton(
-
-                          style: ElevatedButton.styleFrom(
-                            primary: Colors.green,
-                            onPrimary: Colors.white,
-                            padding: EdgeInsets.all(20.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed:(){
-                            Navigator.push(context, MaterialPageRoute(builder:(BuildContext context) {
-                              return loginform();
-                            },),);
-                          }, child: Text('Pay Bill') ),
-                    ]
-
+                  _CustomButton(
+                    text: "Apply New",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ConnectionScreen()),
+                      );
+                    },
                   ),
-
-                  Row(
-
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children:[
-                        ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              primary: Colors.green,
-                              onPrimary: Colors.white,
-                              padding: EdgeInsets.all(20.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed:(){
-                              print("Hellow World");
-                            }, child: Text('Apply for new connection') ),
-
-                        ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              primary: Colors.green,
-                              onPrimary: Colors.white,
-                              padding: EdgeInsets.all(20.0),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed:(){
-                              print("Hellow World");
-                            }, child: Text('Helpline') ),
-                      ]
-
+                  _CustomButton(
+                    text: "Recharge",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RechargeScreen()),
+                      );
+                    },
                   ),
-
-                ]
+                  _CustomButton(
+                    text: "History",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => HistoryDashboard()),
+                      );
+                    },
+                  ),
+                  _CustomButton(
+                    text: "Details",
+                    onPressed: () {
+                      print("Button 4 pressed");
+                    },
+                  ),
+                ],
               ),
-
-
             ),
-          ),
-          bottomNavigationBar: Container(
-            height: 222,
-            color: Colors.green,
-          ),
-
-        )
+          ],
+        ),
+      ),
     );
   }
+}
 
+class _NumberDisplay extends StatefulWidget {
+  @override
+  _NumberDisplayState createState() => _NumberDisplayState();
+}
+
+class _NumberDisplayState extends State<_NumberDisplay> {
+  String number = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Call _refreshBalance once initially
+    _refreshBalance();
+
+    // Schedule _refreshBalance to be called every 10 seconds
+    Timer.periodic(Duration(seconds: 10), (timer) {
+      _refreshBalance();
+    });
+  }
+
+  Future<void> _refreshBalance() async {
+    final Uri url = Uri.parse("http://10.0.2.2:8090/homeenergy.php?uid=${StoreUid.uid}");
+    final http.Response response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = json.decode(response.body);
+      if (data["success"]) {
+        setState(() {
+          number = data["balance"].toString();
+        });
+      } else {
+        // Handle error
+      }
+    } else {
+      // Handle HTTP error
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      number,
+      style: TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
+    );
+  }
+}
+
+
+class _CustomButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  const _CustomButton({
+    required this.text,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        child: Text(text),
+      ),
+    );
+  }
 }

@@ -1,122 +1,184 @@
 import 'package:flutter/material.dart';
-import 'package:thefinalproject/homepage/homepge.dart';
-import 'package:thefinalproject/homepage/login_window.dart';
+import 'registration.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'homepge.dart';
+import 'StoreUid.dart';
 void main(){
   runApp(
       MaterialApp(
-        home: loginform(),
+        debugShowCheckedModeBanner: false,
+        home: Login(uid: ""), // Pass UID here
       )
   );
 }
 
-class loginform extends StatefulWidget{
+class Login extends StatefulWidget {
+  final String uid;
+
+  const Login({Key? key, required this.uid}) : super(key: key);
+
   @override
-  State<StatefulWidget> createState() {
-    return MyForm();
-  }
+  State<StatefulWidget> createState() => LoginScreen(uid);
 }
 
-class MyForm extends State<loginform>{
+class LoginScreen extends State<Login> {
+  final String uid;
   final _valid1key = GlobalKey<FormState>();
+  final TextEditingController _uidController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  LoginScreen(this.uid);
+
+  Future _login() async {
+    if (_valid1key.currentState!.validate()) {
+      try {
+        final response = await http.post(
+          Uri.parse('http://10.0.2.2:8090/passvalid.php'),
+          body: {
+            'uid': _uidController.text,
+            'password': _passwordController.text,
+          },
+        );
+
+        if (response.statusCode == 200) {
+          final responseData = jsonDecode(response.body);
+          if (responseData['success']) {
+            StoreUid.uid = _uidController.text; // Set UID globally
+            print('UID set: ${StoreUid.uid}'); // Add this line to verify the U
+
+            // Navigate to homepage
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+            );
+            print('Login successful');
+          } else {
+            // Display error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(responseData['message'] ?? 'Login failed')),
+            );
+          }
+        } else {
+          // Handle server error
+          print('Server error: ${response.statusCode}');
+        }
+      } catch (e) {
+        // Handle network error
+        print('Network error: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
-
       appBar: AppBar(
-        title: const SizedBox(
-            child: Text("Login"),
-        ),
+        title: const Text("Login"),
       ),
-
-        body :
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 25.0),
-          child: Form(
-            key: _valid1key,
-            child: Column(
+      body: Container(
+        padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 25.0),
+        child: Form(
+          key: _valid1key,
+          child: Column(
             children: <Widget>[
               Padding(
-                  padding: EdgeInsets.all(10.0),
-              child: TextFormField(
-                validator: (state) {  //error 9january
-                  if(state!.length<3) {
-                    return "State should be atleast three character";
-                  }
-                  return null;
-                },
+                padding: const EdgeInsets.all(10.0),
+                child: TextFormField(
+                  validator: (state) {
+                    if(state!.length < 3) {
+                      return "State should be at least three characters";
+                    }
+                    return null;
+                  },
+                  controller: _uidController,
+                  keyboardType: TextInputType.text,
+                  decoration: InputDecoration(
+                      labelText: "Phone UID",
+                      hintText: "Enter your UID",
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15.0)
+                      )
+                  ),
+                ),
+              ),
 
-                decoration: InputDecoration(
-                    labelText:"State",
-                    hintText: "Enter your state",
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15.0)
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: TextFormField(
+                  controller: _passwordController,
+                  keyboardType: TextInputType.visiblePassword,
+                  decoration: InputDecoration(
+                      labelText: "Password",
+                      hintText: "Enter password",
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15.0)
+                      )
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Container(
+                    height: 100,
+                    color: Colors.white,
+                    width: 100,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white, backgroundColor: Colors.green,
+                            padding: const EdgeInsets.all(20.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            _login();
+                          },
+                          child: const Text('Login'),
+                        ),
+                      ],
                     )
-
                 ),
               ),
-              ),
 
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: TextFormField(
-                  validator: (id) => id!.length<15? 'ID should be 15 digit' :null,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                      labelText:"Consumer ID",
-                      hintText: "Enter 15 digit consumer id",
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.0)
+              const Center(
+                  child: Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Center(
+                        child: Text(
+                          'Do not have an account?',
+                          style: TextStyle(fontSize: 18),
+                        ),
                       )
-
-                  ),
-                ),
+                  )
               ),
 
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: TextFormField(
-                  keyboardType: TextInputType.number,
-
-                  decoration: InputDecoration(
-                      labelText:"OTP",
-                      hintText: "Enter OTP",
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.0)
-                      )
-                  ),
-                ),
-              ),
-
+              Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Registration()),
+                      );
+                    },
+                    child: const Text(
+                        'Register Now',
+                        style: TextStyle(
+                          fontSize: 18,
+                          decoration: TextDecoration.underline,
+                        )
+                    ),
+                  )
+              )
             ],
-            ),
           ),
         ),
-      bottomNavigationBar:
-      Container(
-        height: 400,
-        color: Colors.grey[400],
-        width: 100,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [ElevatedButton(
-          style: ElevatedButton.styleFrom(
-          primary: Colors.green,
-            onPrimary: Colors.white,
-            padding: EdgeInsets.all(20.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-          ),
-          onPressed:(){
-            _valid1key.currentState!.validate();
-          }, child: Text('Submit') ),
-            ],
-          )
       ),
-
-
-
-      );
-    }
+    );
   }
+}
 
