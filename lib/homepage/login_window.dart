@@ -4,14 +4,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'homepge.dart';
 import 'StoreUid.dart';
-void main(){
-  runApp(
-      MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Login(uid: ""), // Pass UID here
-      )
-  );
-}
 
 class Login extends StatefulWidget {
   final String uid;
@@ -34,7 +26,7 @@ class LoginScreen extends State<Login> {
     if (_valid1key.currentState!.validate()) {
       try {
         final response = await http.post(
-          Uri.parse('http://10.0.2.2:8090/passvalid.php'),
+          Uri.parse('http://10.0.2.2:8091/passvalid.php'),
           body: {
             'uid': _uidController.text,
             'password': _passwordController.text,
@@ -181,4 +173,3 @@ class LoginScreen extends State<Login> {
     );
   }
 }
-

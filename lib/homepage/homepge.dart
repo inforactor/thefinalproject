@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'profile.dart';
 import 'dart:convert';
 import 'connection.dart';
 import 'recharge.dart';
@@ -27,15 +28,11 @@ class HomePage extends StatelessWidget {
           centerTitle: true,
         ),
         body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _NumberDisplay(),
-
-            const SizedBox(height: 20),
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              child: GridView.count(
+                crossAxisCount: 2,
                 children: [
                   _CustomButton(
                     text: "Apply New",
@@ -65,9 +62,12 @@ class HomePage extends StatelessWidget {
                     },
                   ),
                   _CustomButton(
-                    text: "Details",
+                    text: "Profile",
                     onPressed: () {
-                      print("Button 4 pressed");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ProfileScreen()),
+                      );
                     },
                   ),
                 ],
@@ -101,7 +101,7 @@ class _NumberDisplayState extends State<_NumberDisplay> {
   }
 
   Future<void> _refreshBalance() async {
-    final Uri url = Uri.parse("http://10.0.2.2:8090/homeenergy.php?uid=${StoreUid.uid}");
+    final Uri url = Uri.parse("http://10.0.2.2:8091/homeenergy.php?uid=${StoreUid.uid}");
     final http.Response response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -127,7 +127,6 @@ class _NumberDisplayState extends State<_NumberDisplay> {
   }
 }
 
-
 class _CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
@@ -139,11 +138,19 @@ class _CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        child: Text(text),
+    return Card(
+      elevation: 2,
+      child: InkWell(
+        onTap: onPressed,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
       ),
     );
   }
