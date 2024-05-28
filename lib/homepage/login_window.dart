@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'homepge.dart';
 import 'StoreUid.dart';
+import 'admin_login.dart'; // Import the Admin login screen here
 
 class Login extends StatefulWidget {
   final String uid;
@@ -165,7 +166,24 @@ class LoginScreen extends State<Login> {
                         )
                     ),
                   )
-              )
+              ),
+
+              // Add navigation to AdminLoginScreen below Register Now
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AdminLoginScreen()),
+                  );
+                },
+                child: Text(
+                  'Admin Login',
+                  style: TextStyle(
+                    fontSize: 18,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

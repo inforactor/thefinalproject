@@ -21,7 +21,7 @@ class _HistoryDashboardState extends State<HistoryDashboard> {
 
   Future<void> fetchData() async {
     final response = await http.get(
-        Uri.parse('http://10.0.2.2:8090/history.php?uid=${StoreUid.uid}'));
+        Uri.parse('http://10.0.2.2:8091/history.php?uid=${StoreUid.uid}'));
 
     if (response.statusCode == 200) {
       setState(() {
